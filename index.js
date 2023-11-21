@@ -27,14 +27,7 @@ app.use(cors({origin: "http://localhost:5173", credentials: true}))
 
 // Routes
 app.get('/', (req, res)=>{
-  coinPrice.post('/coins/single',{
-    currency: "USD",
-    code: "BTC",
-    meta: false
-  })
-  .then(res => console.log(res.data))
-  .catch(err => console.log(err))
-    res.send({name: 'Hello World'})
+  res.send("ok")
   })
 app.use('/api/user', authRouter )
 app.use('/api/asset', assetRoute)

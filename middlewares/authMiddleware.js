@@ -3,7 +3,7 @@ const User = require("../model/userModel");
 
 const verifyJwt =async (req, res, next)=>{
     const auth = req?.headers?.authorization;
-    console.log(req.cookies.token)
+    console.log(auth)
        try{
 
          if(!auth || !auth.startsWith('Bearer')){
@@ -17,7 +17,7 @@ const verifyJwt =async (req, res, next)=>{
           next()
         }catch(err){
            const error = new Error('Not authorized token expired, Please login again');
-           console.log(err)
+         //   console.log('here',err)
            next(error)
         }
 }

@@ -1,8 +1,5 @@
 const User = require('../model/userModel');
 const generateToken = require('../config/generateToken');
-const crypto = require('crypto');
-const OTPAuth = require('otpauth');
-const {encode} = require('hi-base32');
 var speakeasy = require("speakeasy");
 const validateOTP = require('../utils/validateOTP');
 const Asset = require('../model/assetModel')
@@ -25,10 +22,10 @@ const createUser = async (req, res, next)=>{
         }
         const newUser = await User.create(userData);
         
-        res.cookie('token', generateToken({user: newUser?.email || newUser?.username})).json({user: userData,token: generateToken({user: newUser?.email || newUser?.username})})
+        res.json({token: generateToken({user: newUser?.email || newUser?.username})})
     }else{
         if(username || email){
-            res.cookie('token', generateToken({user: findUser?.email || findUser?.username})).json({user: findUser, token: generateToken({user: findUser?.email || findUser?.username})})
+            res.json({token: generateToken({user: findUser?.email || findUser?.username})})
         }else{
             throw new Error('Input data not found')
         }
