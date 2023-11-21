@@ -3,7 +3,7 @@ const User = require("../model/userModel");
 
 const verifyJwt =async (req, res, next)=>{
     const auth = req?.headers?.authorization;
-    console.log(auth)
+    
        try{
 
          if(!auth || !auth.startsWith('Bearer')){

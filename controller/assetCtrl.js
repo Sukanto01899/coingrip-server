@@ -1,6 +1,8 @@
 const {coinPrice} = require('../config/axiosApi');
 const Asset = require('../model/assetModel');
 const cron = require('node-cron');
+const validateMongoDBId = require('../utils/validMongodbId');
+const User = require('../model/userModel')
 
 // get asset price from coingecko api
 const getAssetPrice =async (symbol, currency)=>{
@@ -78,5 +80,14 @@ const getAllAssets = async (req, res)=>{
 
     }
 }
+
+
+/*
+
+{
+    "assetId": "655b757d9ec85d5dd84cc878"
+}
+
+*/
 
 module.exports = {getAssetPrice, createAsset, getAllAssets}

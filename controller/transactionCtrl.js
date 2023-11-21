@@ -3,7 +3,22 @@ const Asset = require('../model/assetModel');
 const Transaction = require('../model/transactionModel');
 const validateMongoDBId = require('../utils/validMongodbId');
 const validateOTP = require('../utils/validateOTP');
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+
+// Update balance helper func
+const updateBalance = async (userId, assetId, newBalance)=>{
+    try{
+        const user = await User.findOne({_id: userId});
+        const field = user.balance.assets.find(u => u.assetId.toString() === assetId.toString());
+        const index = user.balance.assets.indexOf(field);
+        field.amount = newBalance;
+        user.balance.assets.set(index, field)
+        user.save();
+    }catch(err){
+        throw new Error(err)
+    }
+}
+
 
 const sendAsset =async (req, res, next)=>{
     const { to, assetId, amount, pin}  = req?.body;
@@ -78,25 +93,20 @@ const sendAsset =async (req, res, next)=>{
         // Cut balance and calculate new balance for sender
         const senderNewBalance = senderTotalAssetAmount - AmountWithTransactionFee
 
-
         // Update sender balance
-        const updateSenderBalance = await User.updateOne({_id: sender._id}, {balance: {assets: [{assetId: asset._id, amount: senderNewBalance.toFixed(5)}]}});
-
-        if(!updateSenderBalance){
-            throw new Error('Sender balance not updated')
-        }
+        await updateBalance(sender._id, asset._id, senderNewBalance)
 
         // Update receiver balance____________
         if(!receiverAsset){
             // If receiver do not have any balance previously
-        const updateReceiverBalance =await User.updateOne({_id: receiver._id}, {balance: {assets: [{assetId: asset._id, amount: sendingAmount}]}}); 
+            const updateReceiverBalance =await User.updateOne({_id: receiver._id}, {$push: {"balance.assets": {assetId: asset._id, amount: sendingAmount}}}); 
 
             updateReceiverBalance ? transactionStatus = true : transactionStatus = false;
         }else{
              // If receiver have balance previously
             const receiverOldBalance = receiverAsset.amount;
             const receiverNewBalance = receiverOldBalance + sendingAmount;
-            const updateReceiverBalance =await User.updateOne({_id: receiver._id}, {balance: {assets: [{assetId: asset._id, amount: receiverNewBalance}]}});
+            const updateReceiverBalance = await updateBalance(receiver._id, asset._id, receiverNewBalance)
 
             updateReceiverBalance ? transactionStatus = true : transactionStatus = false;
         }
@@ -147,7 +157,6 @@ const sendAsset =async (req, res, next)=>{
 const getAllTransaction = async (req, res, next)=>{
     try{
         const {_id} = req.user;
-        console.log(_id)
         const transactions = await Transaction.find({$or: [{"from.uuid": new mongoose.Types.ObjectId(_id)}, {"to.uuid": new mongoose.Types.ObjectId(_id)}]}).limit(5).sort([['createdAt', -1]]);
         res.status(200).json(transactions)
     }catch(err){
@@ -155,4 +164,54 @@ const getAllTransaction = async (req, res, next)=>{
     }
 }
 
-module.exports = {sendAsset, getAllTransaction};
+
+// Request demo assets
+const demoAssetRequest = async (req, res, next) =>{
+    const { assetId }  = req?.params;
+  
+    try{
+        console.log(req.body)
+        // body data validation
+        if( !assetId ){
+            throw new Error (`Invalid data input.`)
+        }
+        const validAssetId = validateMongoDBId(assetId.trim()) && assetId.trim();
+
+        // Get user data from req
+        const user = req.user;
+
+        // Find asset
+        const asset = await Asset.findOne({_id: validAssetId});
+
+        // Find those asset from sender which will send to user
+        const userAsset = user?.balance?.assets?.find(ast => ast.assetId.toString() === assetId);
+
+        // Update user balance____________
+        if(!userAsset){
+            // If user do not have any balance previously
+            await User.updateOne({_id: user._id}, {$push: {"balance.assets": {assetId: asset._id, amount: 5}}}); 
+
+        }else{
+             // If user have asset then do not send asset
+            if(userAsset.amount >= 5){
+                throw new Error("You have enough balance for testing.")
+            }
+             // If receiver have balance previously
+            const userOldBalance = userAsset.amount;
+            const userNewBalance = userOldBalance + 2;
+            await updateBalance(user?._id, asset?._id, userNewBalance)
+        }
+
+        // Send Success response
+        res.status(200).json({
+            isSuccess: true
+        });
+
+    }catch(err){
+        console.log(err);
+        next(err)
+    }
+}
+
+
+module.exports = {sendAsset, getAllTransaction, demoAssetRequest};

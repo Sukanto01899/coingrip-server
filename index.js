@@ -7,8 +7,6 @@ const cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 4000 || process.env.PORT;
 require('dotenv').config();
-var cron = require('node-cron');
-const {coinPrice} = require('./config/axiosApi')
 
 // Require all route
 const authRouter = require('./routes/authRouter');
@@ -19,11 +17,12 @@ const transactionRoute = require('./routes/transactionRoute')
 dbConnect()
 // Morgan
 app.use(morgan('dev'))
+// Cookie parser
 app.use(cookieParser())
 // Json parser
 app.use(express.json())
 // Cors
-app.use(cors({origin: "https://money-send.netlify.app", credentials: true}))
+app.use(cors({origin: "http://localhost:5173", credentials: true}))
 
 // Routes
 app.get('/', (req, res)=>{
