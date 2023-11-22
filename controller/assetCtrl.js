@@ -32,10 +32,10 @@ const updateAssetAuto = async()=>{
     }
 }
 
-// cron.schedule('*/1 * * * *', () => {
-//     console.log('updated')
-//     updateAssetAuto()
-//   });
+cron.schedule('*/1 * * * *', () => {
+    console.log('updated')
+    updateAssetAuto()
+  });
 
 // creating a asset
 const createAsset =async (req, res, next)=>{
@@ -71,12 +71,12 @@ const createAsset =async (req, res, next)=>{
 }
 
 // Get all assets
-const getAllAssets = async (req, res)=>{
+const getAllAssets = async (req, res, next)=>{
     try{
         const assets = await Asset.find({});
         res.status(200).json(assets)
     }catch(err){
-
+        next(err)
     }
 }
 
