@@ -5,7 +5,7 @@ const validateOTP = (base32, token)=>{
     var tokenValidates = speakeasy.totp.verify({
         secret: base32,
         encoding: 'base32',
-        token: token.trim(),
+        token: token,
         window: 6
       });
 

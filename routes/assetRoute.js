@@ -5,6 +5,6 @@ const {createAsset, getAllAssets} = require('../controller/assetCtrl')
 
 
 router.post('/create', createAsset);
-router.get('/all',verifyJwt, getAllAssets);
+router.get('/all', getAllAssets);
 
 module.exports = router;

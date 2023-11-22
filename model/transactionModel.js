@@ -7,7 +7,7 @@ const transactionSchema = mongoose.Schema({
             type: String,
             required: true
         },
-        userId: {
+        fromId: {
             type: String,
             required: true
         },
@@ -21,7 +21,7 @@ const transactionSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    userId: {
+    toId: {
         type: String,
         required: true
     },
@@ -31,7 +31,7 @@ const transactionSchema = mongoose.Schema({
     }
     },
     amount: {
-        type: Number,
+        type: String,
         required: true
     },
     transactionFee: {
@@ -45,6 +45,10 @@ const transactionSchema = mongoose.Schema({
     assetId: {
         type: mongoose.Schema.ObjectId,
          required: true
+    },
+    transactionType: {
+        type: String,
+        enum: ['exchange', 'transfer', 'deposit', 'withdraw']
     }
 
 }, {timestamps: true})

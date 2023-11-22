@@ -8,6 +8,7 @@ const notFound = (req, res, next)=>{
 // Error Handler
 const errorHandler = (err, req, res, next)=>{
     const statuscode = res.statusCode === 200 ? 500 : res.statusCode;
+    console.log(err)
     res.status(statuscode);
     res.json({
         status: 'Request failed',

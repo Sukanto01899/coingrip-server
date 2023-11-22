@@ -16,7 +16,7 @@ const verifyJwt =async (req, res, next)=>{
           req.user = findUser;
           next()
         }catch(err){
-           const error = new Error('Not authorized token expired, Please login again');
+           const error = new Error('Not authorized, Please login again');
          //   console.log('here',err)
            next(error)
         }

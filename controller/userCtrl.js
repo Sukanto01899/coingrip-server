@@ -22,7 +22,7 @@ const createUser = async (req, res, next)=>{
         }
         const newUser = await User.create(userData);
         
-        res.json({token: generateToken({user: newUser?.email || newUser?.username})})
+        res.status(200).json({token: generateToken({user: newUser?.email || newUser?.username})})
     }else{
         if(username || email){
             res.json({token: generateToken({user: findUser?.email || findUser?.username})})
@@ -110,7 +110,7 @@ const verifyOTP =async (req, res, next)=>{
 
          // if otp not enabled then update otp enabled
         if(!auth?.otp_enabled){
-         const updateUser = await User.findOneAndUpdate({$or: [{email}, {username}]}, {auth: {otp_enabled: tokenValidates, otp_verified: tokenValidates}});
+         const updateUser = await User.findOneAndUpdate({$or: [{email}, {username}]}, {auth: {otp_enabled: otp_validation, otp_verified: otp_validation}});
         }
 
         // send response
@@ -122,4 +122,15 @@ const verifyOTP =async (req, res, next)=>{
     }
 }
 
-module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP}
+const disableOtp = async(req, res, next)=>{
+    const {_id} = req.user;
+    try{
+        const updateUser = await User.findOneAndUpdate({_id: _id}, {auth: {otp_enabled: false, otp_verified: false}});
+        console.log(updateUser)
+        res.status(200).json({isDisabled: true})
+    }catch(err){
+        next(err)
+    }
+}
+
+module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp}

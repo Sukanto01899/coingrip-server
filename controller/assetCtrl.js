@@ -2,13 +2,13 @@ const {coinPrice} = require('../config/axiosApi');
 const Asset = require('../model/assetModel');
 const cron = require('node-cron');
 const validateMongoDBId = require('../utils/validMongodbId');
-const User = require('../model/userModel')
+const User = require('../model/userModel');
 
 // get asset price from coingecko api
 const getAssetPrice =async (symbol, currency)=>{
     try{
         const data = await coinPrice.post(`/coins/single`, {currency, code: symbol, meta: true});
-        // console.log(data.data)
+        console.log(data.data)
         return data.data;
     }catch(err){
         console.log(err)
@@ -22,7 +22,6 @@ const updateAssetAuto = async()=>{
         findAll.forEach(async (asset) =>{
            try{
             const price = await getAssetPrice(asset.symbol, 'USD');
-
             const updateAll = await Asset.findByIdAndUpdate({_id: asset._id}, {usdPrice: price?.rate});
            }catch(err){
             console.log(err)
@@ -33,10 +32,10 @@ const updateAssetAuto = async()=>{
     }
 }
 
-// cron.schedule('*/2 * * * *', () => {
-//     console.log('updated')
-//     updateAssetAuto()
-//   });
+cron.schedule('*/1 * * * *', () => {
+    console.log('updated')
+    updateAssetAuto()
+  });
 
 // creating a asset
 const createAsset =async (req, res, next)=>{
@@ -75,7 +74,7 @@ const createAsset =async (req, res, next)=>{
 const getAllAssets = async (req, res)=>{
     try{
         const assets = await Asset.find({});
-        res.json(assets)
+        res.status(200).json(assets)
     }catch(err){
 
     }

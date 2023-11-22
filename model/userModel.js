@@ -80,7 +80,8 @@ const userSchema = mongoose.Schema({
                 amount: {
                     type: Number,
                     default: 0
-                }
+                },
+                symbol: String
             }
         ]
     }
