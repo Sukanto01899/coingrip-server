@@ -7,7 +7,7 @@ const validateOtp = require('../middlewares/validateOtp');
 const router = express.Router();
 
 
-router.post('/send',verifyJwt, validateSender, sendAsset);
+router.post('/send',verifyJwt, validateSender,validateOtp, sendAsset);
 router.post('/exchange',verifyJwt, validateExchanger, exchangeAsset);
 router.get('/',verifyJwt, getAllTransaction);
 router.get('/demo/:assetId', verifyJwt, demoAssetRequest);

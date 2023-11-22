@@ -1,7 +1,7 @@
 const validateSender = (req, res, next)=>{
     const { to, assetId, amount, pin}  = req?.body;
     const {isBlocked } = req?.user;
-
+    console.log(to, assetId, amount, pin)
      // body data checking 
      if( !to || !assetId || !amount || !pin){
         const error =  new Error (`Invalid data input.`);
