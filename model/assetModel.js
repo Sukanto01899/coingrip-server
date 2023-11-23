@@ -33,6 +33,10 @@ const assetSchema = mongoose.Schema({
     fee: {
         type: Number,
         default: 3
+    },
+    minWithdraw: {
+        type: Number,
+        default: 1
     }
 })
 

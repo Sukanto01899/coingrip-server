@@ -4,6 +4,7 @@ const Transaction = require('../model/transactionModel');
 const validateMongoDBId = require('../utils/validMongodbId');
 const validateOTP = require('../utils/validateOTP');
 const mongoose = require('mongoose');
+const sendEmail = require('../config/nodemailer')
 
 // Update balance helper func, when need to update old balance
 const updateBalance = async (userId, assetId, newBalance)=>{
@@ -74,7 +75,7 @@ const sendAsset =async (req, res, next)=>{
 
         // Cut balance and calculate new balance for sender
         const senderNewBalance = senderTotalAssetAmount - amountWithTransactionFee
-
+        
         // Update sender balance
         await updateBalance(sender._id, asset._id, senderNewBalance)
 
@@ -89,13 +90,13 @@ const sendAsset =async (req, res, next)=>{
             const receiverOldBalance = receiverAsset.amount;
             const receiverNewBalance = receiverOldBalance + sendingAmount;
             const updateReceiverBalance = await updateBalance(receiver._id, asset._id,  receiverNewBalance)
-
+            console.log({senderNewBalance, sendingAmount, receiverNewBalance})
             updateReceiverBalance ? transactionStatus = true : transactionStatus = false;
         }
 
         // Send transaction fee in to admin
         // Will bet set in later---------------------------------------------
-
+        console.log({senderNewBalance, sendingAmount})
         // Create new transaction data
         const transaction = {
             isSuccess: transactionStatus,
@@ -122,6 +123,37 @@ const sendAsset =async (req, res, next)=>{
         // Check transaction is success
         if(!createTransaction){
             throw new Error('Transaction creating failed')
+        }
+
+        if(sender.email){
+            sendEmail({
+                to: sender.email,
+                subject: '[CoinGrip]Transfer Success',
+                template: 'send',
+                replace: {
+                    username: sender.name,
+                    amount: sendingAmount,
+                    receiver: receiverId,
+                    asset: asset.symbol,
+                    txid: createTransaction._id
+                }
+            })
+        }
+
+        if(receiver.email){
+            sendEmail({
+                to: receiver.email,
+                subject: '[CoinGrip]Received Successfully',
+                template: 'receive',
+                replace: {
+                    username: receiver.name,
+                    amount: sendingAmount,
+                    sender: sender.email || sender.username,
+                    asset: asset.symbol,
+                    txid: createTransaction._id,
+                    time: createTransaction.createdAt
+                }
+            })
         }
 
         // Send Success response

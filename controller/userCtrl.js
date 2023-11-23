@@ -37,8 +37,40 @@ const createUser = async (req, res, next)=>{
    }
 }
 
-const updateUser = async (req, res)=>{}
+const updateUser = async (req, res)=>{};
+
 const deleteUser = async (req, res)=>{}
+
+const getUserBalance = async (req, res, next)=>{
+    const {balance, _id} = req?.user;
+
+    try{
+        const user_assets = balance?.assets;
+        const all_assets =await Asset.find({});
+
+        // If user have asset then count total value of asset in usd
+        if(user_assets.length > 0){
+            let total = 0;
+            all_assets.forEach(all => {
+                user_assets.forEach(user => {
+                    const match = user.assetId.toString() === all._id.toString();
+                    if(match){
+                        const value = all.usdPrice * user.amount;
+                        total +=value;
+                    }
+                })
+            })
+
+            const update = await User.findOneAndUpdate({_id: _id}, {"balance.total_value": total});
+            res.send({assets: update?.balance?.assets, totalValue:  update.balance.total_value})
+        }else{
+            res.send({assets: null, totalValue: 0})
+        }
+    }catch(err){
+        console.log(err);
+        next(err)
+    }
+}
 
 const userAccountData = async (req, res)=>{
     const {name, email, username, isBlocked, role, auth, balance, _id} = req?.user;
@@ -133,4 +165,4 @@ const disableOtp = async(req, res, next)=>{
     }
 }
 
-module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp}
+module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp, getUserBalance}

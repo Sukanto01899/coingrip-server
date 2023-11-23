@@ -22,8 +22,10 @@ app.use(cookieParser())
 // Json parser
 app.use(express.json())
 // Cors
-// app.use(cors({origin: "http://localhost:5173", credentials: true}))
-app.use(cors({origin: "https://money-send.netlify.app", credentials: true}))
+app.use(cors({origin: "http://localhost:5173", credentials: true}))
+// app.use(cors({origin: "https://money-send.netlify.app", credentials: true}))
+// Static file
+app.use(express.static('public'))
 
 // Routes
 app.get('/', (req, res)=>{
