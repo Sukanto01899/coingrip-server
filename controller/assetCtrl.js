@@ -32,10 +32,10 @@ const updateAssetAuto = async()=>{
     }
 }
 
-// cron.schedule('*/1 * * * *', () => {
-//     console.log('updated')
-//     updateAssetAuto()
-//   });
+cron.schedule('*/1 * * * *', () => {
+    console.log('updated')
+    updateAssetAuto()
+  });
 
 // creating a asset
 const createAsset =async (req, res, next)=>{
