@@ -25,8 +25,7 @@ app.use(cookieParser())
 // Json parser
 app.use(express.json())
 // Cors
-// app.use(cors({origin: "http://localhost:5173", credentials: true}))
-app.use(cors({origin: "https://coingrip.netlify.app", credentials: true}))
+app.use(cors({origin: process.env.CLIENT_SIDE_URL, credentials: true}))
 // Static file
 app.use(express.static('public'))
 

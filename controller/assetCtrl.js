@@ -31,7 +31,7 @@ const updateAssetAuto = async()=>{
     }
 }
 
-cron.schedule('*/1 * * * *', () => {
+cron.schedule('*/15 * * * * *', () => {
     console.log('updated')
     updateAssetAuto()
   });

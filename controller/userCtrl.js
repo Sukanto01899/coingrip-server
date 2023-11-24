@@ -2,8 +2,15 @@ const User = require('../model/userModel');
 const generateToken = require('../config/generateToken');
 var speakeasy = require("speakeasy");
 const validateOTP = require('../utils/validateOTP');
-const Asset = require('../model/assetModel')
+const Asset = require('../model/assetModel');
+const { default: axios } = require('axios');
 
+
+const verifyCaptcha = async (req, res, next)=>{
+        const {token} = req.body;
+        const response = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.GOOGLE_CAPTCHA_SECRET}&response=${token}`);
+        res.send(response.data)
+}
 
 const createUser = async (req, res, next)=>{
     const username = req?.body?.username;
@@ -162,4 +169,4 @@ const disableOtp = async(req, res, next)=>{
     }
 }
 
-module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp, getUserBalance}
+module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp, getUserBalance, verifyCaptcha}

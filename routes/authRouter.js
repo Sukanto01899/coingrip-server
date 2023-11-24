@@ -1,11 +1,12 @@
 const express = require('express');
-const {createUser, GenerateOTP, userAccountData , verifyOTP, disableOtp, getUserBalance} = require('../controller/userCtrl');
+const {createUser, GenerateOTP, userAccountData , verifyOTP, disableOtp, getUserBalance, verifyCaptcha} = require('../controller/userCtrl');
 const {verifyJwt} = require('../middlewares/authMiddleware')
 const router = express.Router();
 const validateOtp = require('../middlewares/validateOtp');
 
 
 router.post('/create', createUser);
+router.post('/captcha/verify', verifyCaptcha);
 router.post("/otp/generate", verifyJwt , GenerateOTP);
 router.post("/otp/verify", verifyJwt , verifyOTP);
 router.post("/otp/disable", verifyJwt , validateOtp, disableOtp);
