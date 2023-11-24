@@ -9,6 +9,7 @@ const { default: axios } = require('axios');
 const verifyCaptcha = async (req, res, next)=>{
         const {token} = req.body;
         const response = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.GOOGLE_CAPTCHA_SECRET}&response=${token}`);
+        console.log(response)
         res.send(response.data)
 }
 

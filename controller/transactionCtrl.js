@@ -252,7 +252,7 @@ const exchangeAsset = async (req, res, next)=>{
 
         // if user do not have this asset previously then update
         if(!updatableAsset){
-            const updateReceiverBalance =await User.updateOne({_id: assetTo._id}, {$push: {"balance.assets": {assetId: assetTo._id, amount: willReceiveAmount , symbol: assetTo.symbol}}}); 
+            const updateReceiverBalance =await User.updateOne({_id: _id}, {$push: {"balance.assets": {assetId: assetTo._id, amount: willReceiveAmount , symbol: assetTo.symbol}}}); 
         }else{
             const oldBalance = updatableAsset.amount;
             const willReceiveNewBalance = oldBalance + willReceiveAmount;
