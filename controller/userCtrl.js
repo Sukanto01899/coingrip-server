@@ -11,8 +11,6 @@ const createUser = async (req, res, next)=>{
     const emailVerified = req?.body?.emailVerified;
    try{
     const findUser = await User.findOne(email ? {email} : {username});
-    console.log(email, username)
-    console.log(findUser)
     if(!findUser){
         const userData = {
             name: req?.body?.name,
@@ -158,7 +156,6 @@ const disableOtp = async(req, res, next)=>{
     const {_id} = req.user;
     try{
         const updateUser = await User.findOneAndUpdate({_id: _id}, {auth: {otp_enabled: false, otp_verified: false}});
-        console.log(updateUser)
         res.status(200).json({isDisabled: true})
     }catch(err){
         next(err)

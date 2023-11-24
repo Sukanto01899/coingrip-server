@@ -8,7 +8,6 @@ const User = require('../model/userModel');
 const getAssetPrice =async (symbol, currency)=>{
     try{
         const data = await coinPrice.post(`/coins/single`, {currency, code: symbol, meta: true});
-        console.log(data.data)
         return data.data;
     }catch(err){
         console.log(err)
@@ -45,7 +44,6 @@ const createAsset =async (req, res, next)=>{
     name = typeof(name) === 'string' && name.trim();
     totalReserved = typeof(totalReserved) === 'number' && totalReserved;
     const price = await getAssetPrice(symbol, 'USD');
-    console.log(price.rate)
     const asset = {
         name: name,
         symbol: symbol,
@@ -80,13 +78,5 @@ const getAllAssets = async (req, res, next)=>{
     }
 }
 
-
-/*
-
-{
-    "assetId": "655b757d9ec85d5dd84cc878"
-}
-
-*/
 
 module.exports = {getAssetPrice, createAsset, getAllAssets}

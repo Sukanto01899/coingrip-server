@@ -8,7 +8,6 @@ const sendEmail = require('../config/nodemailer')
 
 // Update balance helper func, when need to update old balance
 const updateBalance = async (userId, assetId, newBalance)=>{
-    console.log({userId, assetId, newBalance})
     try{
         const user = await User.findOne({_id: userId});
         const field = user.balance.assets.find(asset => asset.assetId.toString() === assetId.toString());
@@ -59,7 +58,6 @@ const sendAsset =async (req, res, next)=>{
         
         // Sender balance checking
         if(!senderAsset){
-            console.log(senderAsset)
             throw new Error('You do not have enough balance 1')
         }
 
@@ -90,13 +88,11 @@ const sendAsset =async (req, res, next)=>{
             const receiverOldBalance = receiverAsset.amount;
             const receiverNewBalance = receiverOldBalance + sendingAmount;
             const updateReceiverBalance = await updateBalance(receiver._id, asset._id,  receiverNewBalance)
-            console.log({senderNewBalance, sendingAmount, receiverNewBalance})
             updateReceiverBalance ? transactionStatus = true : transactionStatus = false;
         }
 
         // Send transaction fee in to admin
         // Will bet set in later---------------------------------------------
-        console.log({senderNewBalance, sendingAmount})
         // Create new transaction data
         const transaction = {
             isSuccess: transactionStatus,
@@ -170,9 +166,13 @@ const sendAsset =async (req, res, next)=>{
 
 const getAllTransaction = async (req, res, next)=>{
     try{
+        const limit = parseInt(req.query.limit)
+        const page = parseInt(req.query.page)
         const {_id} = req.user;
-        const transactions = await Transaction.find({$or: [{"from.uuid": new mongoose.Types.ObjectId(_id)}, {"to.uuid": new mongoose.Types.ObjectId(_id)}]}).limit(5).sort([['createdAt', -1]]);
-        res.status(200).json(transactions)
+        const totalTransaction = await Transaction.countDocuments({$or: [{"from.uuid": new mongoose.Types.ObjectId(_id)}, {"to.uuid": new mongoose.Types.ObjectId(_id)}]}).count().exec();
+        console.log(totalTransaction)
+        const transactions = await Transaction.find({$or: [{"from.uuid": new mongoose.Types.ObjectId(_id)}, {"to.uuid": new mongoose.Types.ObjectId(_id)}]}).skip(limit * page).limit(limit).sort([['createdAt', -1]]);
+        res.status(200).json({transactions, total: totalTransaction})
     }catch(err){
         next(err)
     }
@@ -183,7 +183,6 @@ const demoAssetRequest = async (req, res, next) =>{
     const { assetId }  = req?.params;
   
     try{
-        console.log(req.body)
         // body data validation
         if( !assetId ){
             throw new Error (`Invalid data input.`)
@@ -273,7 +272,7 @@ const exchangeAsset = async (req, res, next)=>{
                 toId: assetTo._id,
                 uuid: _id
             },
-            amount: `${from +": "+ amountToExchange.toFixed(2)} to ${to +": "+ willReceiveAmount.toFixed(2)}`,
+            amount: `${amountToExchange.toFixed(5) +" "+ from} to ${willReceiveAmount.toFixed(5) +" "+ to}`,
             transactionFee: 1,
             asset: assetFrom.name,
             assetId: assetFrom._id,
