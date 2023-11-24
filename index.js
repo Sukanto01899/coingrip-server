@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require("helmet")
 const dbConnect = require('./config/dbConnect');
 const {notFound, errorHandler} = require('./middlewares/errorHandler')
 const cors = require('cors');
@@ -15,6 +16,8 @@ const transactionRoute = require('./routes/transactionRoute')
 
 // Database connection
 dbConnect()
+// Use helmet for protection
+app.use(helmet())
 // Morgan
 app.use(morgan('dev'))
 // Cookie parser
@@ -22,8 +25,8 @@ app.use(cookieParser())
 // Json parser
 app.use(express.json())
 // Cors
-app.use(cors({origin: "http://localhost:5173", credentials: true}))
-// app.use(cors({origin: "https://money-send.netlify.app", credentials: true}))
+// app.use(cors({origin: "http://localhost:5173", credentials: true}))
+app.use(cors({origin: "https://money-send.netlify.app", credentials: true}))
 // Static file
 app.use(express.static('public'))
 

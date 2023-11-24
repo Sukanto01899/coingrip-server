@@ -71,6 +71,10 @@ const userSchema = mongoose.Schema({
             type: Number,
             default: 0
         },
+        point: {
+            type: Number,
+            default: 0
+        },
         assets: [
             {
                 assetId: {
@@ -84,7 +88,17 @@ const userSchema = mongoose.Schema({
                 symbol: String
             }
         ]
-    }
+    },
+    referrals: [{
+        userId: {
+            type: mongoose.Schema.ObjectId
+        },
+        isSuccess: {
+            type: Boolean,
+            default: false
+        }
+    }]
+
 }, {timestamps: true})
 
 module.exports = mongoose.model('User', userSchema)
