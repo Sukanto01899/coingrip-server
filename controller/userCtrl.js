@@ -4,6 +4,8 @@ var speakeasy = require("speakeasy");
 const validateOTP = require('../utils/validateOTP');
 const Asset = require('../model/assetModel');
 const { default: axios } = require('axios');
+const validateMongoDbId = require('../utils/validMongodbId');
+const Kyc = require('../model/kycModel');
 
 
 const verifyCaptcha = async (req, res, next)=>{
@@ -17,6 +19,7 @@ const createUser = async (req, res, next)=>{
     const username = req?.body?.username;
     const email = req?.body?.email;
     const emailVerified = req?.body?.emailVerified;
+    const referralId = req?.query?.referral;
    try{
     const findUser = await User.findOne(email ? {email} : {username});
     if(!findUser){
@@ -27,6 +30,14 @@ const createUser = async (req, res, next)=>{
             emailVerified: emailVerified
         }
         const newUser = await User.create(userData);
+
+        if(referralId && validateMongoDbId(referralId.trim())){
+            const referral = referralId.trim();
+            // Update inviter
+            await User.findOneAndUpdate({_id: referral}, {$push: {referrals: {userId: newUser._id, isSuccess: false}}});
+            // Update new user
+            await User.findOneAndUpdate({_id: newUser._id}, {inviter: referral})
+        }
         
         res.status(200).json({token: generateToken({user: newUser?.email || newUser?.username})})
     }else{
@@ -68,7 +79,7 @@ const getUserBalance = async (req, res, next)=>{
             })
 
             const update = await User.findOneAndUpdate({_id: _id}, {"balance.total_value": total});
-            res.send({assets: update?.balance?.assets, totalValue:  update.balance.total_value})
+            res.status(200).send({assets: update?.balance?.assets, totalValue:  update.balance.total_value})
         }else{
             res.send({assets: null, totalValue: 0})
         }
@@ -170,4 +181,35 @@ const disableOtp = async(req, res, next)=>{
     }
 }
 
-module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp, getUserBalance, verifyCaptcha}
+const getReferralDetails = (req, res)=>{
+    const {referrals, balance} = req.user;
+    res.status(200).json({referrals, point: balance.point});
+}
+
+const submitKycRequest = async (req, res, next)=>{
+    const {_id} = req.user;
+    const {country, firstname, lastname, nid_number, birth_date, nid_image} = req.body;
+
+    try{
+        if(!country || !firstname || !lastname || !nid_number || !birth_date || !nid_image){
+            throw new Error('Invalid data!')
+        }
+        const createKyc = await Kyc.create({country, firstname, lastname, nid_number, birth_date, nid_image, userId: _id});
+
+        res.status(200).send({message: 'Successfully submitted'})
+    }catch(err){
+        next(err)
+    }
+};
+
+const getKycDetails = async (req, res)=>{
+    const {_id} = req.user;
+    const kycData = await Kyc.findOne({userId: _id})
+    if(kycData){
+        res.status(200).send(kycData)
+    }else{
+        res.status(200).send({kyc: null, message: 'not found'})
+    }
+}
+
+module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp, getUserBalance, verifyCaptcha, getReferralDetails, submitKycRequest, getKycDetails}

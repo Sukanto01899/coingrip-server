@@ -2,20 +2,29 @@ const User = require('../model/userModel');
 const Asset = require('../model/assetModel');
 const Transaction = require('../model/transactionModel');
 const validateMongoDBId = require('../utils/validMongodbId');
-const validateOTP = require('../utils/validateOTP');
 const mongoose = require('mongoose');
-const sendEmail = require('../config/nodemailer')
+const sendEmail = require('../config/nodemailer');
 
 // Update balance helper func, when need to update old balance
-const updateBalance = async (userId, assetId, newBalance)=>{
+const updateBalance = async (updateData)=>{
+    const {userId, assetId, symbol, amountToUpdate} = updateData;
+    console.log({userId, assetId, symbol, amountToUpdate})
+    
     try{
+        // Find user
         const user = await User.findOne({_id: userId});
-        const field = user.balance.assets.find(asset => asset.assetId.toString() === assetId.toString());
-        const index = user.balance.assets.indexOf(field);
-        field.amount = newBalance;
-        // field.symbol = symbol;
-        user.balance.assets.set(index, field)
-        user.save();
+        // check receiver for previously balance have
+        const previousBalance = user.balance.assets.find(asset => asset.assetId.toString() === assetId.toString());
+
+        if(!previousBalance){
+            const updateReceiverBalance =await User.updateOne({_id: userId}, {$push: {"balance.assets": {assetId: assetId, amount: amountToUpdate , symbol: symbol}}});
+        }else{
+            const oldAndNewTotalBalance = previousBalance.amount + amountToUpdate;
+            const index = user.balance.assets.indexOf(previousBalance);
+            previousBalance.amount = oldAndNewTotalBalance;
+            user.balance.assets.set(index, previousBalance);
+            user.save();
+        }
     }catch(err){
         throw new Error(err)
     }
@@ -35,7 +44,7 @@ const sendAsset =async (req, res, next)=>{
         // Get sender user data from req
         const sender = req.user;
         
-        // Find receiver by email or username
+        // Find receiver by id, email or username
         const receiver = await User.findOne(validateMongoDBId(receiverId) ? {_id: receiverId} : {$or: [{email: receiverId}, {username: receiverId}]});
 
         // Find asset
@@ -46,15 +55,13 @@ const sendAsset =async (req, res, next)=>{
             throw new Error('Invalid address or asset.')
         }
 
-        // Check receiver and sender is same or not
+        // Check receiver and sender address is same or not
         if(sender._id.toString() === receiver._id.toString()){
             throw new Error('You can not send asset to your own account')
         }
        
         // Find those asset from sender which will send to receiver
         const senderAsset = sender?.balance?.assets?.find(ast => ast.assetId.toString() === assetId);
-        const receiverAsset = receiver?.balance?.assets?.find(ast => ast.assetId.toString() === assetId);
-
         
         // Sender balance checking
         if(!senderAsset){
@@ -72,30 +79,30 @@ const sendAsset =async (req, res, next)=>{
         }
 
         // Cut balance and calculate new balance for sender
-        const senderNewBalance = senderTotalAssetAmount - amountWithTransactionFee
+        const senderNewBalance = senderTotalAssetAmount - amountWithTransactionFee;
         
         // Update sender balance
-        await updateBalance(sender._id, asset._id, senderNewBalance)
+        await updateBalance({
+            userId: sender._id,
+            assetId: asset._id,
+            symbol: asset.symbol,
+            amountToUpdate: senderNewBalance - senderTotalAssetAmount
+        })
 
         // Update receiver balance____________
-        if(!receiverAsset){
-            // If receiver do not have any balance previously
-            const updateReceiverBalance =await User.updateOne({_id: receiver._id}, {$push: {"balance.assets": {assetId: asset._id, amount: sendingAmount , symbol: asset.symbol}}}); 
-
-            updateReceiverBalance ? transactionStatus = true : transactionStatus = false;
-        }else{
-             // If receiver have balance previously
-            const receiverOldBalance = receiverAsset.amount;
-            const receiverNewBalance = receiverOldBalance + sendingAmount;
-            const updateReceiverBalance = await updateBalance(receiver._id, asset._id,  receiverNewBalance)
-            updateReceiverBalance ? transactionStatus = true : transactionStatus = false;
-        }
+        await updateBalance({
+            userId: receiver._id,
+            assetId: asset._id,
+            symbol: asset.symbol,
+            amountToUpdate: sendingAmount
+        })
 
         // Send transaction fee in to admin
         // Will bet set in later---------------------------------------------
+
         // Create new transaction data
         const transaction = {
-            isSuccess: transactionStatus,
+            isSuccess: true,
             from: {
                 name: sender.name,
                 fromId: sender.email || sender.username,
@@ -121,6 +128,7 @@ const sendAsset =async (req, res, next)=>{
             throw new Error('Transaction creating failed')
         }
 
+        // Send Transfer success email--
         if(sender.email){
             sendEmail({
                 to: sender.email,
@@ -136,6 +144,7 @@ const sendAsset =async (req, res, next)=>{
             })
         }
 
+        // Send Payment received email--
         if(receiver.email){
             sendEmail({
                 to: receiver.email,
@@ -230,7 +239,7 @@ const exchangeAsset = async (req, res, next)=>{
         const {from, to} = req.query;
         const amountToExchange = req.body.amount;
         const {_id, balance} = req.user;
-        const {amount, assetId} = req.fromAsset;
+        const {amount, assetId, symbol} = req.fromAsset;
 
         // Find to asset
         const assetTo =await Asset.findOne({symbol: to});
@@ -240,24 +249,25 @@ const exchangeAsset = async (req, res, next)=>{
         // Update balance
         const willPayNewBalance = amount - parseFloat(amountToExchange);
     
-        // cut and update the exchangeable balance from user
-        const updateFromAsset = await updateBalance(_id, assetId, willPayNewBalance);
+        // Update  "from asset" balance
+        await updateBalance({
+            userId: _id, 
+            assetId, 
+            symbol: from,
+            amountToUpdate: willPayNewBalance - amount
+        });
 
         // Calculate hou much asset user will received;
         const totalExchangeAmountUsd = parseFloat(amountToExchange) * assetFrom.usdPrice;
-        const willReceiveAmount = totalExchangeAmountUsd /assetTo.usdPrice;
+        const willReceiveAmount = totalExchangeAmountUsd / assetTo.usdPrice;
 
-        // check asset user have or not
-        const updatableAsset = balance?.assets?.find(asset => asset.assetId.toString() === assetTo._id.toString());
-
-        // if user do not have this asset previously then update
-        if(!updatableAsset){
-            const updateReceiverBalance =await User.updateOne({_id: _id}, {$push: {"balance.assets": {assetId: assetTo._id, amount: willReceiveAmount , symbol: assetTo.symbol}}}); 
-        }else{
-            const oldBalance = updatableAsset.amount;
-            const willReceiveNewBalance = oldBalance + willReceiveAmount;
-            await updateBalance(_id, assetTo._id, willReceiveNewBalance)
-        }
+        // Update "To asset" balance
+        await updateBalance({
+            userId: _id,
+            assetId: assetTo._id,
+            symbol: assetTo.symbol,
+            amountToUpdate: willReceiveAmount
+        })
 
         // Create new transaction data
         const transaction = {

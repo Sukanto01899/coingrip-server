@@ -91,13 +91,19 @@ const userSchema = mongoose.Schema({
     },
     referrals: [{
         userId: {
-            type: mongoose.Schema.ObjectId
+            type: mongoose.Schema.ObjectId,
+            ref: 'User'
         },
         isSuccess: {
             type: Boolean,
             default: false
         }
-    }]
+    }],
+    inviter: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        default: null
+    }
 
 }, {timestamps: true})
 
