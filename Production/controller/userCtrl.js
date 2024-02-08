@@ -224,7 +224,3 @@ const getKycDetails = async (req, res)=>{
 }
 
 module.exports = {createUser, updateUser, deleteUser, GenerateOTP, userAccountData, verifyOTP, disableOtp, getUserBalance, verifyCaptcha, getReferralDetails, submitKycRequest, getKycDetails}
-
-
-
-

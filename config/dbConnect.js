@@ -10,3 +10,21 @@ const dbConnect =async ()=>{
 }
 
 module.exports = dbConnect;
+
+/*
+
+server{
+    listen 80;
+    congrip-server 13.233.251.5;
+
+    location / {
+        proxy_pass http://127.0.0.1:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+*/
