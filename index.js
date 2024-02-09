@@ -24,7 +24,8 @@ app.use(morgan('dev'))
 app.use(cookieParser())
 // Json parser
 app.use(express.json())
-// Cors
+
+// Corss
 // app.use(cors({origin: "http://localhost:5173", credentials: true}))
 app.use(cors())
 
