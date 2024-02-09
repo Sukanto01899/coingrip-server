@@ -26,13 +26,13 @@ app.use(cookieParser())
 app.use(express.json())
 // Cors
 // app.use(cors({origin: "http://localhost:5173", credentials: true}))
-app.use(cors({origin: "https://coingrip.netlify.app", credentials: true}))
+app.use(cors())
 
 // Routes
 app.get('/', (req, res)=>{
   res.send("ok")
   })
-  
+
 app.use('/api/user', authRouter )
 app.use('/api/asset', assetRoute)
 app.use('/api/transaction', transactionRoute)
