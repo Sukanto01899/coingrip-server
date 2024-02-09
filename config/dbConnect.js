@@ -15,7 +15,7 @@ module.exports = dbConnect;
 
 server{
     listen 80;
-    congrip-server 13.233.251.5;
+    server-name 13.235.67.123;
 
     location / {
         proxy_pass http://127.0.0.1:4000;
