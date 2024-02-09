@@ -32,6 +32,7 @@ app.use(cors({origin: "https://coingrip.netlify.app", credentials: true}))
 app.get('/', (req, res)=>{
   res.send("ok")
   })
+  
 app.use('/api/user', authRouter )
 app.use('/api/asset', assetRoute)
 app.use('/api/transaction', transactionRoute)
