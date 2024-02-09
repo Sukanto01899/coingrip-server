@@ -25,5 +25,5 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm install
-      - run: sudo pm2 kill
+      - run: pm2 kill
       - run: npm start
